@@ -1,0 +1,19 @@
+{
+    "name": "Reboot.MazeGrid.Editor",
+    "rootNamespace": "MazeGrid.Editor",
+    "references": [
+        "Reboot.MazeGrid",
+        "Reboot.ObjectType"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

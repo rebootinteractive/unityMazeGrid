@@ -1,0 +1,19 @@
+{
+  "name": "com.reboot.mazegrid",
+  "version": "0.1.0",
+  "displayName": "Reboot MazeGrid",
+  "description": "Generic 2D grid-based puzzle system with A* pathfinding, spawners, separators, and hidden cell reveal logic.",
+  "unity": "2021.3",
+  "keywords": [
+    "grid",
+    "maze",
+    "pathfinding",
+    "puzzle"
+  ],
+  "dependencies": {
+    "com.reboot.objecttype": "https://github.com/umurcg/unityColorTypes.git"
+  },
+  "author": {
+    "name": "Reboot"
+  }
+}
