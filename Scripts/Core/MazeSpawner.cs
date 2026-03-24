@@ -14,7 +14,7 @@ namespace MazeGrid
         private MazeGrid parentGrid;
         private Vector2Int gridPosition;
         private SpawnerDirection direction;
-        private Queue<int> spawnQueue = new Queue<int>();
+        private Queue<MazeCellData> spawnQueue = new Queue<MazeCellData>();
 
         public Vector2Int GridPosition => gridPosition;
         public Vector2Int TargetCellPosition => GetTargetCellPosition();
@@ -26,7 +26,7 @@ namespace MazeGrid
             MazeGrid grid,
             Vector2Int position,
             SpawnerDirection dir,
-            List<int> typeQueue)
+            List<MazeCellData> typeQueue)
         {
             parentGrid = grid;
             gridPosition = position;
@@ -35,9 +35,9 @@ namespace MazeGrid
             spawnQueue.Clear();
             if (typeQueue != null)
             {
-                foreach (var typeId in typeQueue)
+                foreach (var cellData in typeQueue)
                 {
-                    spawnQueue.Enqueue(typeId);
+                    spawnQueue.Enqueue(cellData);
                 }
             }
 
@@ -80,10 +80,10 @@ namespace MazeGrid
             if (!parentGrid.IsCellEmpty(targetPos))
                 return;
 
-            int typeId = spawnQueue.Dequeue();
+            MazeCellData cellData = spawnQueue.Dequeue();
             Vector3 worldPos = parentGrid.GetCellWorldPosition(targetPos);
 
-            var item = parentGrid.CreateItemForSpawner(typeId, targetPos, worldPos);
+            var item = parentGrid.CreateItemForSpawner(cellData, targetPos, worldPos);
 
             if (item != null)
             {

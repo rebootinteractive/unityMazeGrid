@@ -35,7 +35,8 @@ namespace MazeGrid.Editor
         private void StartDragFromSpawnerQueueCell(int spawnerIndex, int queueIndex, MazeCellData spawnerCell)
         {
             _isDragging = true;
-            _draggedTypeIndex = spawnerCell.spawnerQueue[queueIndex];
+            var queueItem = spawnerCell.spawnerQueue[queueIndex];
+            _draggedTypeIndex = queueItem != null ? queueItem.itemTypeId : -1;
             _dragSourceIsTypeSource = false;
             _dragSourceCellIndex = -1;
             _dragSourceSpawnerCellIndex = spawnerIndex;
@@ -82,7 +83,8 @@ namespace MazeGrid.Editor
                 var spawnerCell = grid.cells[_dragSourceSpawnerCellIndex];
                 if (spawnerCell.spawnerQueue != null && _dragSourceSpawnerQueueIndex < spawnerCell.spawnerQueue.Count)
                 {
-                    spawnerCell.spawnerQueue[_dragSourceSpawnerQueueIndex] = -1;
+                    if (spawnerCell.spawnerQueue[_dragSourceSpawnerQueueIndex] != null)
+                        spawnerCell.spawnerQueue[_dragSourceSpawnerQueueIndex].itemTypeId = -1;
                     NotifyChanged();
                 }
             }

@@ -293,7 +293,8 @@ namespace MazeGrid.Editor
 
                 for (int i = 0; i < maxBadges; i++)
                 {
-                    int typeIndex = cell.spawnerQueue[i];
+                    var queueItem = cell.spawnerQueue[i];
+                    int typeIndex = queueItem != null ? queueItem.itemTypeId : -1;
                     if (typeIndex >= 0 && _library != null && typeIndex < _library.objectTypes.Length)
                     {
                         var type = _library.objectTypes[typeIndex];
@@ -387,8 +388,9 @@ namespace MazeGrid.Editor
             else if (_dragSourceSpawnerCellIndex >= 0 && _dragSourceSpawnerQueueIndex >= 0)
             {
                 var spawnerCell = grid.cells[_dragSourceSpawnerCellIndex];
-                int tempType = spawnerCell.spawnerQueue[_dragSourceSpawnerQueueIndex];
-                spawnerCell.spawnerQueue[_dragSourceSpawnerQueueIndex] = cell.itemTypeId;
+                var queueItem = spawnerCell.spawnerQueue[_dragSourceSpawnerQueueIndex];
+                int tempType = queueItem != null ? queueItem.itemTypeId : -1;
+                if (queueItem != null) queueItem.itemTypeId = cell.itemTypeId;
                 cell.itemTypeId = tempType;
                 NotifyChanged();
             }
@@ -450,9 +452,9 @@ namespace MazeGrid.Editor
                     int emptySlots = 0;
                     if (cell.spawnerQueue != null)
                     {
-                        foreach (int typeIndex in cell.spawnerQueue)
+                        foreach (var queueItem in cell.spawnerQueue)
                         {
-                            if (typeIndex < 0) emptySlots++;
+                            if (queueItem == null || queueItem.itemTypeId < 0) emptySlots++;
                         }
                     }
 
@@ -498,7 +500,7 @@ namespace MazeGrid.Editor
 
                                 if (GUILayout.Button("\u2190", GUILayout.Width(GRID_CELL_SIZE / 3f - 1), GUILayout.Height(18)) && qIndex > 0)
                                 {
-                                    int temp = cell.spawnerQueue[qIndex];
+                                    var temp = cell.spawnerQueue[qIndex];
                                     cell.spawnerQueue[qIndex] = cell.spawnerQueue[qIndex - 1];
                                     cell.spawnerQueue[qIndex - 1] = temp;
                                     NotifyChanged();
@@ -513,7 +515,7 @@ namespace MazeGrid.Editor
 
                                 if (GUILayout.Button("\u2192", GUILayout.Width(GRID_CELL_SIZE / 3f - 1), GUILayout.Height(18)) && qIndex < cell.spawnerQueue.Count - 1)
                                 {
-                                    int temp = cell.spawnerQueue[qIndex];
+                                    var temp = cell.spawnerQueue[qIndex];
                                     cell.spawnerQueue[qIndex] = cell.spawnerQueue[qIndex + 1];
                                     cell.spawnerQueue[qIndex + 1] = temp;
                                     NotifyChanged();
@@ -579,7 +581,8 @@ namespace MazeGrid.Editor
 
         private void DrawSpawnerQueueCell(int spawnerIndex, int queueIndex, MazeCellData spawnerCell)
         {
-            int typeIndex = spawnerCell.spawnerQueue[queueIndex];
+            var queueItem = spawnerCell.spawnerQueue[queueIndex];
+            int typeIndex = queueItem != null ? queueItem.itemTypeId : -1;
 
             Rect cellRect = GUILayoutUtility.GetRect(GRID_CELL_SIZE, GRID_CELL_SIZE);
 
@@ -640,7 +643,7 @@ namespace MazeGrid.Editor
                         DropTypeOnSpawnerQueueCell(spawnerIndex, queueIndex, spawnerCell);
                         evt.Use();
                     }
-                    else if (spawnerCell.spawnerQueue[queueIndex] >= 0)
+                    else if (spawnerCell.spawnerQueue[queueIndex] != null && spawnerCell.spawnerQueue[queueIndex].itemTypeId >= 0)
                     {
                         StartDragFromSpawnerQueueCell(spawnerIndex, queueIndex, spawnerCell);
                         evt.Use();
@@ -654,25 +657,33 @@ namespace MazeGrid.Editor
             var grid = _currentConfig;
             if (grid == null) return;
 
+            var targetItem = spawnerCell.spawnerQueue[queueIndex];
+            if (targetItem == null)
+            {
+                targetItem = new MazeCellData { state = GridCellState.Full, itemTypeId = -1 };
+                spawnerCell.spawnerQueue[queueIndex] = targetItem;
+            }
+
             if (_dragSourceIsTypeSource)
             {
-                spawnerCell.spawnerQueue[queueIndex] = _draggedTypeIndex;
+                targetItem.itemTypeId = _draggedTypeIndex;
                 NotifyChanged();
             }
             else if (_dragSourceCellIndex >= 0)
             {
                 var sourceCell = grid.cells[_dragSourceCellIndex];
                 int tempType = sourceCell.itemTypeId;
-                sourceCell.itemTypeId = spawnerCell.spawnerQueue[queueIndex];
-                spawnerCell.spawnerQueue[queueIndex] = tempType;
+                sourceCell.itemTypeId = targetItem.itemTypeId;
+                targetItem.itemTypeId = tempType;
                 NotifyChanged();
             }
             else if (_dragSourceSpawnerCellIndex >= 0 && _dragSourceSpawnerQueueIndex >= 0)
             {
                 var sourceSpawnerCell = grid.cells[_dragSourceSpawnerCellIndex];
-                int tempType = sourceSpawnerCell.spawnerQueue[_dragSourceSpawnerQueueIndex];
-                sourceSpawnerCell.spawnerQueue[_dragSourceSpawnerQueueIndex] = spawnerCell.spawnerQueue[queueIndex];
-                spawnerCell.spawnerQueue[queueIndex] = tempType;
+                var sourceItem = sourceSpawnerCell.spawnerQueue[_dragSourceSpawnerQueueIndex];
+                int tempType = sourceItem != null ? sourceItem.itemTypeId : -1;
+                if (sourceItem != null) sourceItem.itemTypeId = targetItem.itemTypeId;
+                targetItem.itemTypeId = tempType;
                 NotifyChanged();
             }
 
@@ -733,7 +744,8 @@ namespace MazeGrid.Editor
                 {
                     for (int i = 0; i < cell.spawnerQueue.Count; i++)
                     {
-                        cell.spawnerQueue[i] = -1;
+                        if (cell.spawnerQueue[i] != null)
+                            cell.spawnerQueue[i].itemTypeId = -1;
                     }
                 }
             }
@@ -845,7 +857,9 @@ namespace MazeGrid.Editor
                 {
                     for (int i = 0; i < cell.spawnerQueue.Count && poolIndex < typePool.Count; i++)
                     {
-                        cell.spawnerQueue[i] = typePool[poolIndex++];
+                        if (cell.spawnerQueue[i] == null)
+                            cell.spawnerQueue[i] = new MazeCellData { state = GridCellState.Full };
+                        cell.spawnerQueue[i].itemTypeId = typePool[poolIndex++];
                     }
                 }
             }
@@ -928,9 +942,9 @@ namespace MazeGrid.Editor
                     count++;
                 else if (cell.state == GridCellState.Spawner && cell.spawnerQueue != null)
                 {
-                    foreach (var queueType in cell.spawnerQueue)
+                    foreach (var queueItem in cell.spawnerQueue)
                     {
-                        if (queueType == typeIndex)
+                        if (queueItem != null && queueItem.itemTypeId == typeIndex)
                             count++;
                     }
                 }

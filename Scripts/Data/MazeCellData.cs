@@ -17,9 +17,12 @@ namespace MazeGrid
         [Tooltip("If true, the item in this cell starts hidden")]
         public bool isHidden = false;
 
+        [Tooltip("Generic per-cell metadata flags (game interprets this)")]
+        public int metadata = 0;
+
         public SpawnerDirection direction = SpawnerDirection.Down;
 
-        [Tooltip("Type IDs for spawner queue")]
-        public List<int> spawnerQueue = new List<int>();
+        [Tooltip("Cell data for spawner queue items")]
+        public List<MazeCellData> spawnerQueue = new List<MazeCellData>();
     }
 }

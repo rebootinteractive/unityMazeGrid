@@ -57,6 +57,15 @@ namespace MazeGrid.Editor
 
         #endregion
 
+        /// <summary>
+        /// Optional callback invoked after default cell rendering. Game editors can use this
+        /// to draw custom overlays (badges, icons, labels) on top of grid cells.
+        /// Parameters: (Rect cellRect, int cellIndex, MazeCellData cellData)
+        /// </summary>
+        public Action<Rect, int, MazeCellData> CustomCellOverlay { get; set; }
+
+        #endregion
+
         #region Constructor
 
         public MazeGridEditorModule(ObjectTypeLibrary library, Action onConfigChanged, Action repaintCallback = null)

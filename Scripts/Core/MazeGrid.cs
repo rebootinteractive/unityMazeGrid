@@ -314,7 +314,7 @@ namespace MazeGrid
         /// Creates an item for a spawner to push into the grid.
         /// Override in game subclass to spawn game-specific prefabs.
         /// </summary>
-        public virtual IMazeItem CreateItemForSpawner(int itemTypeId, Vector2Int gridPos, Vector3 worldPos)
+        public virtual IMazeItem CreateItemForSpawner(MazeCellData cellData, Vector2Int gridPos, Vector3 worldPos)
         {
             return null;
         }

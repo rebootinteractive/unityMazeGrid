@@ -132,6 +132,9 @@ namespace MazeGrid.Editor
                 DrawDefaultCellContent(cellRect, cell, spawnerIndex);
             }
 
+            // Draw custom cell overlay (game-specific badges, icons, etc.)
+            CustomCellOverlay?.Invoke(cellRect, cellIndex, cell);
+
             // Draw cell border
             DrawCellBorder(cellRect);
 

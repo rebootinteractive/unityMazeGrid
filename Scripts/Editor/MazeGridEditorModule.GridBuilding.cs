@@ -216,7 +216,7 @@ namespace MazeGrid.Editor
                 // Initialize spawner queue if changing to Spawner
                 if (cell.state == GridCellState.Spawner && cell.spawnerQueue == null)
                 {
-                    cell.spawnerQueue = new System.Collections.Generic.List<int>();
+                    cell.spawnerQueue = new System.Collections.Generic.List<MazeCellData>();
                 }
             }
 
@@ -290,9 +290,9 @@ namespace MazeGrid.Editor
                     int emptySlots = 0;
                     if (cell.spawnerQueue != null)
                     {
-                        foreach (int typeIndex in cell.spawnerQueue)
+                        foreach (var queueItem in cell.spawnerQueue)
                         {
-                            if (typeIndex < 0) emptySlots++;
+                            if (queueItem == null || queueItem.itemTypeId < 0) emptySlots++;
                         }
                     }
 
@@ -336,9 +336,9 @@ namespace MazeGrid.Editor
                         if (GUILayout.Button("+ Add Slot", GUILayout.Width(80)))
                         {
                             if (cell.spawnerQueue == null)
-                                cell.spawnerQueue = new System.Collections.Generic.List<int>();
+                                cell.spawnerQueue = new System.Collections.Generic.List<MazeCellData>();
 
-                            cell.spawnerQueue.Add(-1);
+                            cell.spawnerQueue.Add(new MazeCellData { state = GridCellState.Full, itemTypeId = -1 });
                             NotifyChanged();
                         }
 
@@ -387,7 +387,7 @@ namespace MazeGrid.Editor
                                 // Left button (move left in queue)
                                 if (GUILayout.Button("\u2190", GUILayout.Width(GRID_CELL_SIZE / 3f - 1), GUILayout.Height(18)) && qIndex > 0)
                                 {
-                                    int temp = cell.spawnerQueue[qIndex];
+                                    var temp = cell.spawnerQueue[qIndex];
                                     cell.spawnerQueue[qIndex] = cell.spawnerQueue[qIndex - 1];
                                     cell.spawnerQueue[qIndex - 1] = temp;
                                     NotifyChanged();
@@ -404,7 +404,7 @@ namespace MazeGrid.Editor
                                 // Right button (move right in queue)
                                 if (GUILayout.Button("\u2192", GUILayout.Width(GRID_CELL_SIZE / 3f - 1), GUILayout.Height(18)) && qIndex < cell.spawnerQueue.Count - 1)
                                 {
-                                    int temp = cell.spawnerQueue[qIndex];
+                                    var temp = cell.spawnerQueue[qIndex];
                                     cell.spawnerQueue[qIndex] = cell.spawnerQueue[qIndex + 1];
                                     cell.spawnerQueue[qIndex + 1] = temp;
                                     NotifyChanged();
@@ -442,7 +442,8 @@ namespace MazeGrid.Editor
 
         private void DrawQueueSlotBox(int spawnerIndex, int queueIndex, MazeCellData spawnerCell)
         {
-            int typeIndex = spawnerCell.spawnerQueue[queueIndex];
+            var queueItem = spawnerCell.spawnerQueue[queueIndex];
+            int typeIndex = queueItem != null ? queueItem.itemTypeId : -1;
 
             Rect cellRect = GUILayoutUtility.GetRect(GRID_CELL_SIZE, GRID_CELL_SIZE);
 
@@ -920,7 +921,7 @@ namespace MazeGrid.Editor
 
                 if (state == GridCellState.Spawner && grid.cells[i].spawnerQueue == null)
                 {
-                    grid.cells[i].spawnerQueue = new System.Collections.Generic.List<int>();
+                    grid.cells[i].spawnerQueue = new System.Collections.Generic.List<MazeCellData>();
                 }
             }
         }
@@ -938,7 +939,7 @@ namespace MazeGrid.Editor
 
             if (spawnerCell.spawnerQueue == null)
             {
-                spawnerCell.spawnerQueue = new System.Collections.Generic.List<int>();
+                spawnerCell.spawnerQueue = new System.Collections.Generic.List<MazeCellData>();
             }
 
             int currentSize = spawnerCell.spawnerQueue.Count;
@@ -948,7 +949,7 @@ namespace MazeGrid.Editor
                 int slotsToAdd = newSize - currentSize;
                 for (int i = 0; i < slotsToAdd; i++)
                 {
-                    spawnerCell.spawnerQueue.Add(-1);
+                    spawnerCell.spawnerQueue.Add(new MazeCellData { state = GridCellState.Full, itemTypeId = -1 });
                 }
             }
             else if (newSize < currentSize)
