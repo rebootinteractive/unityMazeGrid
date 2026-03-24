@@ -55,8 +55,6 @@ namespace MazeGrid.Editor
         private MazeGridConfig _currentConfig;
         private TypeAllocation[] _currentAllocations;
 
-        #endregion
-
         /// <summary>
         /// Optional callback invoked after default cell rendering. Game editors can use this
         /// to draw custom overlays (badges, icons, labels) on top of grid cells.
