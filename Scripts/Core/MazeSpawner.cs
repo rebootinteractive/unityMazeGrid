@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace MazeGrid
@@ -11,10 +13,18 @@ namespace MazeGrid
     /// </summary>
     public class MazeSpawner : MonoBehaviour
     {
+        [SerializeField] private TMP_Text remainingCountText;
+
         private MazeGrid parentGrid;
         private Vector2Int gridPosition;
         private SpawnerDirection direction;
         private Queue<MazeCellData> spawnQueue = new Queue<MazeCellData>();
+
+        /// <summary>Fires after a new item is created and registered.</summary>
+        public event Action<IMazeItem, Vector2Int> OnItemSpawned;
+
+        /// <summary>Fires when the spawn queue becomes empty.</summary>
+        public event Action OnQueueEmpty;
 
         public Vector2Int GridPosition => gridPosition;
         public Vector2Int TargetCellPosition => GetTargetCellPosition();
@@ -48,6 +58,7 @@ namespace MazeGrid
                 parentGrid.OnCellCleared += OnCellCleared;
             }
 
+            UpdateRemainingCountText();
             OnInitialized();
         }
 
@@ -91,12 +102,15 @@ namespace MazeGrid
                 item.OnBecameActive();
                 item.OnSpawnedBySpawner();
                 OnItemCreated(item, targetPos);
+                OnItemSpawned?.Invoke(item, targetPos);
             }
 
+            UpdateRemainingCountText();
             OnQueueChanged();
 
             if (spawnQueue.Count == 0)
             {
+                OnQueueEmpty?.Invoke();
                 OnQueueExhausted();
             }
         }
@@ -120,6 +134,14 @@ namespace MazeGrid
         /// Called when the spawn queue becomes empty.
         /// </summary>
         protected virtual void OnQueueExhausted() { }
+
+        private void UpdateRemainingCountText()
+        {
+            if (remainingCountText != null)
+            {
+                remainingCountText.text = RemainingCount.ToString();
+            }
+        }
 
         private Vector2Int GetTargetCellPosition()
         {

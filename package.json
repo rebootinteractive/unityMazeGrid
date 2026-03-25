@@ -1,6 +1,6 @@
 {
   "name": "com.reboot.mazegrid",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "displayName": "Reboot MazeGrid",
   "description": "Generic 2D grid-based puzzle system with A* pathfinding, spawners, separators, and hidden cell reveal logic.",
   "unity": "2021.3",

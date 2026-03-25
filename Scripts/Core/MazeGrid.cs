@@ -157,6 +157,22 @@ namespace MazeGrid
             return grid[gridPos] == null;
         }
 
+        /// <summary>
+        /// Returns true if the cell is occupied (has an item, is a spawner, or is a wall).
+        /// Returns false for empty cells and out-of-bounds positions.
+        /// Used by MazeBorderCreator to determine the grid shape for border generation.
+        /// </summary>
+        public bool IsSolidCell(Vector2Int gridPos)
+        {
+            if (grid == null || !grid.IsValidPosition(gridPos))
+                return false;
+            if (spawnerCells.Contains(gridPos))
+                return true;
+            if (gridWallCells.Contains(gridPos))
+                return true;
+            return grid[gridPos] != null;
+        }
+
         public void RegisterItem(IMazeItem item, Vector2Int gridPos)
         {
             if (grid == null || !grid.IsValidPosition(gridPos))
