@@ -42,6 +42,9 @@ namespace MazeGrid
         [Tooltip("Extra Y rotation added to all pieces to correct for prefab orientation. Adjust until pieces face the right direction.")]
         [SerializeField] private float rotationOffset = 0f;
 
+        [Tooltip("Position offset applied to all pieces (world space)")]
+        [SerializeField] private Vector3 positionOffset = Vector3.zero;
+
         [Header("References")]
         [SerializeField] private MazeGrid mazeGrid;
 
@@ -109,9 +112,9 @@ namespace MazeGrid
                 // Vertex world position: vertex (vx, vy) is at the corner where 4 cells meet
                 // Cell centers are at gridOrigin + (col * cellSizeX, 0, -row * cellSizeZ)
                 // Vertex sits half a cell offset from cell centers
-                float worldX = gridOrigin.x + (piece.vertexX - 0.5f) * cellSizeX;
-                float worldZ = gridOrigin.z - (piece.vertexY - 0.5f) * cellSizeZ;
-                Vector3 worldPos = new Vector3(worldX, gridOrigin.y, worldZ);
+                float worldX = gridOrigin.x + (piece.vertexX - 0.5f) * cellSizeX + positionOffset.x;
+                float worldZ = gridOrigin.z - (piece.vertexY - 0.5f) * cellSizeZ + positionOffset.z;
+                Vector3 worldPos = new Vector3(worldX, gridOrigin.y + positionOffset.y, worldZ);
 
                 Quaternion rotation = Quaternion.Euler(0f, piece.rotationY + rotationOffset, 0f);
 
