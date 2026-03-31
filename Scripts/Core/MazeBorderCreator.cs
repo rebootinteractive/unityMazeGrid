@@ -35,6 +35,14 @@ namespace MazeGrid
         [Tooltip("Concave border curve (0.5×0.5, pivot at corner)")]
         [SerializeField] private GameObject innerCornerPrefab;
 
+        [Header("Half Prefabs (for open edges)")]
+        [Tooltip("Half ground tile for open edge cells (1.0×0.5, pivot at center). Optional.")]
+        [SerializeField] private GameObject halfCenterPrefab;
+        [Tooltip("Half edge with wall on the left side (looking from open edge inward). Optional.")]
+        [SerializeField] private GameObject halfEdgeLeftPrefab;
+        [Tooltip("Half edge with wall on the right side (looking from open edge inward). Optional.")]
+        [SerializeField] private GameObject halfEdgeRightPrefab;
+
         [Header("Settings")]
         [Tooltip("The target half-cell size in world units. Prefabs are authored at 0.5×0.5 and scaled to this value. For a grid with cellSize=1.5, set this to 0.75.")]
         [SerializeField] private float prefabBaseSize = 0.5f;
@@ -44,6 +52,12 @@ namespace MazeGrid
 
         [Tooltip("Position offset applied to all pieces (world space)")]
         [SerializeField] private Vector3 positionOffset = Vector3.zero;
+
+        [Header("Open Edge")]
+        // TODO: Currently only supports open top edge. Open bottom/left/right edges need
+        // additional half prefab variants and rotation logic to work correctly.
+        [Tooltip("If true, the top edge is open (no border). Half prefabs fill the boundary row.")]
+        [SerializeField] private bool openTopEdge = true;
 
         [Header("References")]
         [SerializeField] private MazeGrid mazeGrid;
@@ -104,9 +118,24 @@ namespace MazeGrid
             float cellSizeZ = mazeGrid.CellSizeZ;
             Vector3 gridOrigin = mazeGrid.GridOrigin;
 
+            // Find the exit row vertex boundary for open edge filtering
+            int exitVertexRow = mazeGrid.ExitRow + 1; // vertex row just below the exit row
+
             foreach (var piece in pieces)
             {
-                GameObject prefab = GetPrefabForType(piece.type);
+                var openEdgeResult = GetOpenEdgeAction(piece, gridWidth, gridHeight, exitVertexRow);
+
+                // Skip = completely remove this piece
+                if (openEdgeResult == OpenEdgeAction.Skip)
+                    continue;
+
+                // Use half prefab or normal prefab
+                GameObject prefab;
+                if (openEdgeResult == OpenEdgeAction.UseHalf)
+                    prefab = GetHalfPrefabForType(piece);
+                else
+                    prefab = GetPrefabForType(piece.type);
+
                 if (prefab == null) continue;
 
                 // Vertex world position: vertex (vx, vy) is at the corner where 4 cells meet
@@ -142,6 +171,63 @@ namespace MazeGrid
 
                 borderContainer = null;
             }
+        }
+
+        private enum OpenEdgeAction { Normal, UseHalf, Skip }
+
+        /// <summary>
+        /// Determines what to do with a piece near an open edge:
+        /// - Normal: use full prefab
+        /// - UseHalf: use half-sized prefab (edge row of cells adjacent to open edge)
+        /// - Skip: don't place anything (on the open edge boundary itself)
+        /// </summary>
+        private OpenEdgeAction GetOpenEdgeAction(BorderPiece piece, int gridWidth, int gridHeight, int exitVertexRow)
+        {
+            if (!openTopEdge)
+                return OpenEdgeAction.Normal;
+
+            if (piece.vertexY < exitVertexRow)
+                return OpenEdgeAction.Skip;
+            if (piece.vertexY == exitVertexRow)
+                return OpenEdgeAction.UseHalf;
+
+            return OpenEdgeAction.Normal;
+        }
+
+        private GameObject GetHalfPrefabForType(BorderPiece piece)
+        {
+            // At the open edge boundary:
+            // - Edge pieces face toward the open side → wall is removed → use halfCenter (ground only)
+            // - Corner pieces lose one wall → use halfEdge (left or right based on position)
+            // - Center pieces (if any) → use halfCenter
+            switch (piece.type)
+            {
+                case BorderPieceType.Center:
+                case BorderPieceType.Edge:
+                    return halfCenterPrefab;
+
+                case BorderPieceType.OuterCorner:
+                case BorderPieceType.InnerCorner:
+                    // Determine left vs right based on position relative to grid center
+                    bool isLeftSide = IsLeftSideOfOpenEdge(piece);
+                    return isLeftSide ? halfEdgeLeftPrefab : halfEdgeRightPrefab;
+
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Determines if a corner piece at the open top edge boundary is on the left or right side.
+        /// Uses the original rotation to determine which direction the solid area is.
+        /// TODO: Currently only supports open top edge. Extend for other directions when needed.
+        /// </summary>
+        private bool IsLeftSideOfOpenEdge(BorderPiece piece)
+        {
+            // For top open edge:
+            //   case 1 (BR solid) → rotation 0° → left side
+            //   case 2 (BL solid) → rotation 90° → right side
+            return piece.rotationY == 0f;
         }
 
         private GameObject GetPrefabForType(BorderPieceType type)
