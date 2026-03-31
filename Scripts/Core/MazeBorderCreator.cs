@@ -23,7 +23,7 @@ namespace MazeGrid
     /// </summary>
     public class MazeBorderCreator : MonoBehaviour
     {
-        [Header("Prefabs (pivot: top-left, size: 0.5×0.5 units)")]
+        [Header("Prefabs (pivot: top-left corner)")]
         [Tooltip("Full ground tile, no border edges")]
         [SerializeField] private GameObject centerPrefab;
         [Tooltip("Ground on one side, raised border on the other")]
@@ -32,6 +32,13 @@ namespace MazeGrid
         [SerializeField] private GameObject outerCornerPrefab;
         [Tooltip("Concave border curve (3 solid neighbors)")]
         [SerializeField] private GameObject innerCornerPrefab;
+
+        [Header("Settings")]
+        [Tooltip("The target half-cell size in world units. Prefabs are authored at 0.5×0.5 and scaled to this value. For a grid with cellSize=1.5, set this to 0.75.")]
+        [SerializeField] private float prefabBaseSize = 0.5f;
+
+        [Tooltip("Extra Y rotation added to all pieces to correct for prefab orientation. Adjust until pieces face the right direction.")]
+        [SerializeField] private float rotationOffset = 0f;
 
         [Header("References")]
         [SerializeField] private MazeGrid mazeGrid;
@@ -97,16 +104,18 @@ namespace MazeGrid
                 GameObject prefab = GetPrefabForType(piece.type);
                 if (prefab == null) continue;
 
-                // Vertex world position: vertex (vx, vy) is at the top-left corner of cell (vx, vy)
-                // Offset by -0.5 cell in each axis to sit at the cell corner intersection
+                // Vertex world position: vertex (vx, vy) is at the corner where 4 cells meet
+                // Cell centers are at gridOrigin + (col * cellSizeX, 0, -row * cellSizeZ)
+                // Vertex sits half a cell offset from cell centers
                 float worldX = gridOrigin.x + (piece.vertexX - 0.5f) * cellSizeX;
                 float worldZ = gridOrigin.z - (piece.vertexY - 0.5f) * cellSizeZ;
                 Vector3 worldPos = new Vector3(worldX, gridOrigin.y, worldZ);
 
-                Quaternion rotation = Quaternion.Euler(0f, piece.rotationY, 0f);
+                Quaternion rotation = Quaternion.Euler(0f, piece.rotationY + rotationOffset, 0f);
 
-                // Scale prefab from 0.5-unit base to actual half-cell size
-                Vector3 scale = new Vector3(cellSizeX, 1f, cellSizeZ);
+                // Prefabs are 0.5×0.5 units. Scale them to prefabBaseSize.
+                float scaleFactor = prefabBaseSize / 0.5f;
+                Vector3 scale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
 
                 SpawnBorderPiece(prefab, worldPos, rotation, scale, piece);
             }
