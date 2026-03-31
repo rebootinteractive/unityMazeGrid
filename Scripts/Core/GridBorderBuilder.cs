@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MazeGrid
 {
-    public enum BorderPieceType { None, Center, Edge, OuterCorner, InnerCorner }
+    public enum BorderPieceType { None, Empty, Center, Edge, OuterCorner, InnerCorner }
 
     /// <summary>
     /// Describes a single border piece to place at a grid vertex.
@@ -88,7 +88,8 @@ namespace MazeGrid
         {
             switch (caseIndex)
             {
-                case 0: // 0000: all empty — no piece
+                case 0: // 0000: all empty
+                    pieces.Add(new BorderPiece(vx, vy, BorderPieceType.Empty, 0f));
                     break;
 
                 case 15: // 1111: all solid — center (ground fill)

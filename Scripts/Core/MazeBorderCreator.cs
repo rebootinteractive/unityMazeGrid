@@ -23,14 +23,16 @@ namespace MazeGrid
     /// </summary>
     public class MazeBorderCreator : MonoBehaviour
     {
-        [Header("Prefabs (pivot: top-left corner)")]
-        [Tooltip("Full ground tile, no border edges")]
+        [Header("Prefabs")]
+        [Tooltip("Background tile for empty areas (1.0×1.0, pivot at center). Optional.")]
+        [SerializeField] private GameObject emptyPrefab;
+        [Tooltip("Full ground tile, no border edges (1.0×1.0, pivot at center)")]
         [SerializeField] private GameObject centerPrefab;
-        [Tooltip("Ground on one side, raised border on the other")]
+        [Tooltip("Ground on one side, raised border on the other (1.0×0.5, pivot at center of border edge)")]
         [SerializeField] private GameObject edgePrefab;
-        [Tooltip("Convex border curve (1 solid neighbor)")]
+        [Tooltip("Convex border curve (0.5×0.5, pivot at corner)")]
         [SerializeField] private GameObject outerCornerPrefab;
-        [Tooltip("Concave border curve (3 solid neighbors)")]
+        [Tooltip("Concave border curve (0.5×0.5, pivot at corner)")]
         [SerializeField] private GameObject innerCornerPrefab;
 
         [Header("Settings")]
@@ -143,6 +145,7 @@ namespace MazeGrid
         {
             return type switch
             {
+                BorderPieceType.Empty => emptyPrefab,
                 BorderPieceType.Center => centerPrefab,
                 BorderPieceType.Edge => edgePrefab,
                 BorderPieceType.OuterCorner => outerCornerPrefab,
