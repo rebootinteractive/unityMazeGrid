@@ -5,7 +5,7 @@ using ObjectType;
 namespace MazeGrid.Editor
 {
     /// <summary>
-    /// Type painting sub-stage: type assignment for Full cells and spawner queues using drag-and-drop.
+    /// Type painting sub-stage: type assignment for Valid cells and spawner queues using drag-and-drop.
     /// Also includes the Grid Log panel and Type Log panel.
     /// </summary>
     public partial class MazeGridEditorModule
@@ -15,7 +15,7 @@ namespace MazeGrid.Editor
         private void DrawTypePaintingInternal(MazeGridConfig grid, TypeAllocation[] allocations)
         {
             EditorGUILayout.LabelField("Type Painting", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Drag and drop types onto Full cells and spawner queues.", MessageType.Info);
+            EditorGUILayout.HelpBox("Drag and drop types onto Valid cells and spawner queues.", MessageType.Info);
 
             EditorGUILayout.Space(10);
 
@@ -174,10 +174,10 @@ namespace MazeGrid.Editor
         {
             switch (cell.state)
             {
-                case GridCellState.Empty:
+                case GridCellState.Invalid:
                     break;
 
-                case GridCellState.Full:
+                case GridCellState.Valid:
                     DrawCellTypeCircle(cellRect, cell.itemTypeId);
 
                     if (cell.isHidden)
@@ -660,7 +660,7 @@ namespace MazeGrid.Editor
             var targetItem = spawnerCell.spawnerQueue[queueIndex];
             if (targetItem == null)
             {
-                targetItem = new MazeCellData { state = GridCellState.Full, itemTypeId = -1 };
+                targetItem = new MazeCellData { state = GridCellState.Valid, itemTypeId = -1 };
                 spawnerCell.spawnerQueue[queueIndex] = targetItem;
             }
 
@@ -736,7 +736,7 @@ namespace MazeGrid.Editor
         {
             foreach (var cell in grid.cells)
             {
-                if (cell.state == GridCellState.Full)
+                if (cell.state == GridCellState.Valid)
                 {
                     cell.itemTypeId = -1;
                 }
@@ -769,7 +769,7 @@ namespace MazeGrid.Editor
         {
             foreach (var cell in grid.cells)
             {
-                if (cell.state == GridCellState.Full)
+                if (cell.state == GridCellState.Valid)
                 {
                     cell.isHidden = true;
                 }
@@ -808,7 +808,7 @@ namespace MazeGrid.Editor
 
             foreach (var cell in grid.cells)
             {
-                if (cell.state == GridCellState.Full)
+                if (cell.state == GridCellState.Valid)
                     fullCellCount++;
                 else if (cell.state == GridCellState.Spawner && cell.spawnerQueue != null)
                     spawnerQueueCount += cell.spawnerQueue.Count;
@@ -841,10 +841,10 @@ namespace MazeGrid.Editor
 
             int poolIndex = 0;
 
-            // Assign to Full cells
+            // Assign to Valid cells
             foreach (var cell in grid.cells)
             {
-                if (cell.state == GridCellState.Full && poolIndex < typePool.Count)
+                if (cell.state == GridCellState.Valid && poolIndex < typePool.Count)
                 {
                     cell.itemTypeId = typePool[poolIndex++];
                 }
@@ -858,7 +858,7 @@ namespace MazeGrid.Editor
                     for (int i = 0; i < cell.spawnerQueue.Count && poolIndex < typePool.Count; i++)
                     {
                         if (cell.spawnerQueue[i] == null)
-                            cell.spawnerQueue[i] = new MazeCellData { state = GridCellState.Full };
+                            cell.spawnerQueue[i] = new MazeCellData { state = GridCellState.Valid };
                         cell.spawnerQueue[i].itemTypeId = typePool[poolIndex++];
                     }
                 }
@@ -938,7 +938,7 @@ namespace MazeGrid.Editor
 
             foreach (var cell in grid.cells)
             {
-                if (cell.state == GridCellState.Full && cell.itemTypeId == typeIndex)
+                if (cell.state == GridCellState.Valid && cell.itemTypeId == typeIndex)
                     count++;
                 else if (cell.state == GridCellState.Spawner && cell.spawnerQueue != null)
                 {
@@ -978,7 +978,7 @@ namespace MazeGrid.Editor
             {
                 for (int i = 0; i < grid.cells.Length; i++)
                 {
-                    if (grid.cells[i].state == GridCellState.Full)
+                    if (grid.cells[i].state == GridCellState.Valid)
                     {
                         fullCellsInGrid++;
                     }
@@ -1009,7 +1009,7 @@ namespace MazeGrid.Editor
 
             // Display statistics
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Full Cells in Grid:", GUILayout.Width(150));
+            EditorGUILayout.LabelField("Valid Cells in Grid:", GUILayout.Width(150));
             EditorGUILayout.LabelField(fullCellsInGrid.ToString(), EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
 
@@ -1019,7 +1019,7 @@ namespace MazeGrid.Editor
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Total Full Cells:", GUILayout.Width(150));
+            EditorGUILayout.LabelField("Total Valid Cells:", GUILayout.Width(150));
             EditorGUILayout.LabelField(totalFullCells.ToString(), EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
 

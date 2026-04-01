@@ -8,7 +8,7 @@ namespace MazeGrid
     [Serializable]
     public class MazeCellData
     {
-        public GridCellState state = GridCellState.Full;
+        public GridCellState state = GridCellState.Valid;
 
         [FormerlySerializedAs("typeIndex")]
         [Tooltip("Integer ID representing the item type (game interprets this)")]

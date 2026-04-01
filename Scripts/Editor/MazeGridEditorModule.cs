@@ -35,7 +35,7 @@ namespace MazeGrid.Editor
         private SubStage _subStage = SubStage.GridBuilding;
 
         // Grid building state
-        private GridCellState _selectedCellState = GridCellState.Empty;
+        private GridCellState _selectedCellState = GridCellState.Invalid;
 
         // Scroll positions
         private Vector2 _scrollPos;

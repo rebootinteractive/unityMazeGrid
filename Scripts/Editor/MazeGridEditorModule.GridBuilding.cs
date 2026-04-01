@@ -107,16 +107,16 @@ namespace MazeGrid.Editor
             EditorGUILayout.LabelField("Cell State", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginHorizontal();
-            GUI.backgroundColor = _selectedCellState == GridCellState.Empty ? Color.yellow : Color.white;
-            if (GUILayout.Button("Empty", GUILayout.Height(25)))
+            GUI.backgroundColor = _selectedCellState == GridCellState.Invalid ? Color.yellow : Color.white;
+            if (GUILayout.Button("Invalid", GUILayout.Height(25)))
             {
-                _selectedCellState = GridCellState.Empty;
+                _selectedCellState = GridCellState.Invalid;
             }
 
-            GUI.backgroundColor = _selectedCellState == GridCellState.Full ? Color.yellow : Color.white;
-            if (GUILayout.Button("Full", GUILayout.Height(25)))
+            GUI.backgroundColor = _selectedCellState == GridCellState.Valid ? Color.yellow : Color.white;
+            if (GUILayout.Button("Valid", GUILayout.Height(25)))
             {
-                _selectedCellState = GridCellState.Full;
+                _selectedCellState = GridCellState.Valid;
             }
 
             GUI.backgroundColor = _selectedCellState == GridCellState.Spawner ? Color.yellow : Color.white;
@@ -125,27 +125,21 @@ namespace MazeGrid.Editor
                 _selectedCellState = GridCellState.Spawner;
             }
 
-            GUI.backgroundColor = _selectedCellState == GridCellState.GridWall ? Color.yellow : Color.white;
-            if (GUILayout.Button("GridWall", GUILayout.Height(25)))
-            {
-                _selectedCellState = GridCellState.GridWall;
-            }
-
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
 
             // Bulk operations
             EditorGUILayout.Space(5);
 
-            if (GUILayout.Button("Make All Empty", GUILayout.Height(25)))
+            if (GUILayout.Button("Make All Invalid", GUILayout.Height(25)))
             {
-                MakeAllCells(grid, GridCellState.Empty);
+                MakeAllCells(grid, GridCellState.Invalid);
                 NotifyChanged();
             }
 
-            if (GUILayout.Button("Make All Full", GUILayout.Height(25)))
+            if (GUILayout.Button("Make All Valid", GUILayout.Height(25)))
             {
-                MakeAllCells(grid, GridCellState.Full);
+                MakeAllCells(grid, GridCellState.Valid);
                 NotifyChanged();
             }
 
@@ -207,8 +201,8 @@ namespace MazeGrid.Editor
                 // Set cell state on click
                 cell.state = _selectedCellState;
 
-                // Reset type index if changing to non-Full state
-                if (cell.state != GridCellState.Full)
+                // Reset type index if changing to non-Valid state
+                if (cell.state != GridCellState.Valid)
                 {
                     cell.itemTypeId = -1;
                 }
@@ -338,7 +332,7 @@ namespace MazeGrid.Editor
                             if (cell.spawnerQueue == null)
                                 cell.spawnerQueue = new System.Collections.Generic.List<MazeCellData>();
 
-                            cell.spawnerQueue.Add(new MazeCellData { state = GridCellState.Full, itemTypeId = -1 });
+                            cell.spawnerQueue.Add(new MazeCellData { state = GridCellState.Valid, itemTypeId = -1 });
                             NotifyChanged();
                         }
 
@@ -495,7 +489,7 @@ namespace MazeGrid.Editor
 
             for (int col = 0; col < grid.columns; col++)
             {
-                newCells[col] = new MazeCellData { state = GridCellState.Full, itemTypeId = -1 };
+                newCells[col] = new MazeCellData { state = GridCellState.Valid, itemTypeId = -1 };
             }
 
             for (int row = 0; row < grid.rows; row++)
@@ -557,7 +551,7 @@ namespace MazeGrid.Editor
             for (int col = 0; col < grid.columns; col++)
             {
                 int newIndex = grid.rows * grid.columns + col;
-                newCells[newIndex] = new MazeCellData { state = GridCellState.Full, itemTypeId = -1 };
+                newCells[newIndex] = new MazeCellData { state = GridCellState.Valid, itemTypeId = -1 };
             }
 
             int oldRows = grid.rows;
@@ -686,7 +680,7 @@ namespace MazeGrid.Editor
 
             for (int row = 0; row < grid.rows; row++)
             {
-                newCells[row * newColumns] = new MazeCellData { state = GridCellState.Full, itemTypeId = -1 };
+                newCells[row * newColumns] = new MazeCellData { state = GridCellState.Valid, itemTypeId = -1 };
 
                 for (int col = 0; col < grid.columns; col++)
                 {
@@ -750,7 +744,7 @@ namespace MazeGrid.Editor
                 }
 
                 int newColIndex = row * newColumns + grid.columns;
-                newCells[newColIndex] = new MazeCellData { state = GridCellState.Full, itemTypeId = -1 };
+                newCells[newColIndex] = new MazeCellData { state = GridCellState.Valid, itemTypeId = -1 };
             }
 
             int oldColumns = grid.columns;
@@ -914,7 +908,7 @@ namespace MazeGrid.Editor
             {
                 grid.cells[i].state = state;
 
-                if (state != GridCellState.Full)
+                if (state != GridCellState.Valid)
                 {
                     grid.cells[i].itemTypeId = -1;
                 }
@@ -949,7 +943,7 @@ namespace MazeGrid.Editor
                 int slotsToAdd = newSize - currentSize;
                 for (int i = 0; i < slotsToAdd; i++)
                 {
-                    spawnerCell.spawnerQueue.Add(new MazeCellData { state = GridCellState.Full, itemTypeId = -1 });
+                    spawnerCell.spawnerQueue.Add(new MazeCellData { state = GridCellState.Valid, itemTypeId = -1 });
                 }
             }
             else if (newSize < currentSize)

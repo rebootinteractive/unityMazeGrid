@@ -154,7 +154,7 @@ namespace MazeGrid.Editor
         {
             switch (cell.state)
             {
-                case GridCellState.Empty:
+                case GridCellState.Invalid:
                     GUIStyle emptyStyle = new GUIStyle(EditorStyles.boldLabel);
                     emptyStyle.alignment = TextAnchor.MiddleCenter;
                     emptyStyle.fontSize = 24;
@@ -163,7 +163,7 @@ namespace MazeGrid.Editor
                     GUI.color = Color.white;
                     break;
 
-                case GridCellState.Full:
+                case GridCellState.Valid:
                     DrawDefaultCircle(cellRect, cell.itemTypeId);
                     break;
 
@@ -201,33 +201,6 @@ namespace MazeGrid.Editor
                     }
                     break;
 
-                case GridCellState.GridWall:
-                    DrawGridWallIcon(cellRect);
-                    break;
-            }
-        }
-
-        private void DrawGridWallIcon(Rect cellRect)
-        {
-            float lineWidth = cellRect.width * 0.6f;
-            float lineHeight = 3f;
-            float spacing = 6f;
-            float totalHeight = lineHeight * 3 + spacing * 2;
-
-            float startX = cellRect.x + (cellRect.width - lineWidth) / 2f;
-            float startY = cellRect.y + (cellRect.height - totalHeight) / 2f;
-
-            Color lineColor = new Color(0.3f, 0.3f, 0.3f);
-
-            for (int i = 0; i < 3; i++)
-            {
-                Rect lineRect = new Rect(
-                    startX,
-                    startY + i * (lineHeight + spacing),
-                    lineWidth,
-                    lineHeight
-                );
-                EditorGUI.DrawRect(lineRect, lineColor);
             }
         }
 
@@ -315,14 +288,12 @@ namespace MazeGrid.Editor
         {
             switch (state)
             {
-                case GridCellState.Empty:
+                case GridCellState.Invalid:
                     return new Color(0.5f, 0.5f, 0.5f);
-                case GridCellState.Full:
+                case GridCellState.Valid:
                     return new Color(0.9f, 0.9f, 0.9f);
                 case GridCellState.Spawner:
                     return new Color(.7f, .7f, .7f);
-                case GridCellState.GridWall:
-                    return new Color(0.8f, 0.6f, 0.6f);
                 default:
                     return Color.white;
             }
@@ -401,14 +372,12 @@ namespace MazeGrid.Editor
         {
             switch (cell.state)
             {
-                case GridCellState.Empty:
+                case GridCellState.Invalid:
                     return "";
-                case GridCellState.Full:
-                    return "F";
+                case GridCellState.Valid:
+                    return "V";
                 case GridCellState.Spawner:
                     return GetDirectionSymbol(cell.direction);
-                case GridCellState.GridWall:
-                    return "\u2261"; // Three horizontal lines symbol
                 default:
                     return "?";
             }

@@ -161,7 +161,7 @@ namespace MazeGrid.Editor
         {
             switch (cell.state)
             {
-                case GridCellState.Empty:
+                case GridCellState.Invalid:
                     GUIStyle emptyStyle = new GUIStyle(EditorStyles.boldLabel);
                     emptyStyle.alignment = TextAnchor.MiddleCenter;
                     emptyStyle.fontSize = 24;
@@ -170,7 +170,7 @@ namespace MazeGrid.Editor
                     GUI.color = Color.white;
                     break;
 
-                case GridCellState.Full:
+                case GridCellState.Valid:
                     Rect circleRect = new Rect(
                         cellRect.x + cellRect.width * 0.3f,
                         cellRect.y + cellRect.height * 0.3f,

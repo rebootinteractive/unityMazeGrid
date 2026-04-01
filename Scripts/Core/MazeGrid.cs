@@ -39,9 +39,8 @@ namespace MazeGrid
         private HashSet<Vector2Int> spawnerCells = new HashSet<Vector2Int>();
         private List<MazeSpawner> spawners = new List<MazeSpawner>();
 
-        // Wall tracking
-        private HashSet<Vector2Int> gridWallCells = new HashSet<Vector2Int>();
-        private List<GameObject> gridWalls = new List<GameObject>();
+        // Valid cells tracking (cells that are part of the board, may or may not have items)
+        private HashSet<Vector2Int> validCells = new HashSet<Vector2Int>();
 
         // Hidden item tracking
         private Dictionary<Vector2Int, IMazeItem> hiddenItems = new Dictionary<Vector2Int, IMazeItem>();
@@ -148,9 +147,15 @@ namespace MazeGrid
             return grid.WorldToGrid(worldPos);
         }
 
+        /// <summary>
+        /// Returns true if the cell is a valid playable cell with no item currently in it.
+        /// Invalid cells, spawner cells, and cells with items return false.
+        /// </summary>
         public bool IsCellEmpty(Vector2Int gridPos)
         {
             if (grid == null || !grid.IsValidPosition(gridPos))
+                return false;
+            if (!validCells.Contains(gridPos))
                 return false;
             if (spawnerCells.Contains(gridPos))
                 return false;
@@ -158,19 +163,15 @@ namespace MazeGrid
         }
 
         /// <summary>
-        /// Returns true if the cell is occupied (has an item, is a spawner, or is a wall).
-        /// Returns false for empty cells and out-of-bounds positions.
+        /// Returns true if the cell is part of the board (Valid or Spawner).
+        /// Invalid cells and out-of-bounds return false.
         /// Used by MazeBorderCreator to determine the grid shape for border generation.
         /// </summary>
         public bool IsSolidCell(Vector2Int gridPos)
         {
             if (grid == null || !grid.IsValidPosition(gridPos))
                 return false;
-            if (spawnerCells.Contains(gridPos))
-                return true;
-            if (gridWallCells.Contains(gridPos))
-                return true;
-            return grid[gridPos] != null;
+            return validCells.Contains(gridPos) || spawnerCells.Contains(gridPos);
         }
 
         public void RegisterItem(IMazeItem item, Vector2Int gridPos)
@@ -235,20 +236,19 @@ namespace MazeGrid
 
             spawnerCells.Clear();
             spawners.Clear();
-            gridWallCells.Clear();
-            gridWalls.Clear();
+            validCells.Clear();
 
             gridLocalOrigin.x = -(gridWidth - 1) * cellSizeX / 2f;
             grid = new Grid2D<IMazeItem>(gridWidth, gridHeight, cellSizeX, cellSizeZ, GridOrigin, negativeZDirection: true);
 
-            SpawnBorderWalls(config.columns, config.rows);
+            SpawnBorderInvalidCells(config.columns, config.rows);
 
             if (config.cells != null)
             {
                 for (int i = 0; i < config.cells.Length; i++)
                 {
                     var cellData = config.cells[i];
-                    if (cellData == null || cellData.state == GridCellState.Empty)
+                    if (cellData == null)
                         continue;
 
                     int configRow = i / config.columns;
@@ -258,26 +258,35 @@ namespace MazeGrid
                     Vector2Int gridPos = new Vector2Int(gridCol, gridRow);
                     Vector3 worldPos = grid.GridToWorld(gridPos);
 
-                    if (cellData.state == GridCellState.Full)
+#pragma warning disable CS0618 // GridWall is obsolete
+                    // Invalid and GridWall (obsolete) are not part of the board — skip
+                    if (cellData.state == GridCellState.Invalid || cellData.state == GridCellState.GridWall)
+                        continue;
+#pragma warning restore CS0618
+
+                    if (cellData.state == GridCellState.Valid)
                     {
-                        var item = CreateItem(cellData, gridPos, worldPos);
-                        if (item != null)
+                        // Register as a valid cell (part of the board)
+                        validCells.Add(gridPos);
+
+                        // Only spawn an item if a type is assigned
+                        if (cellData.itemTypeId >= 0)
                         {
-                            grid[gridPos] = item;
-                            if (cellData.isHidden)
+                            var item = CreateItem(cellData, gridPos, worldPos);
+                            if (item != null)
                             {
-                                item.IsHidden = true;
-                                hiddenItems[gridPos] = item;
+                                grid[gridPos] = item;
+                                if (cellData.isHidden)
+                                {
+                                    item.IsHidden = true;
+                                    hiddenItems[gridPos] = item;
+                                }
                             }
                         }
                     }
                     else if (cellData.state == GridCellState.Spawner)
                     {
                         SpawnSpawnerInternal(gridPos, worldPos, cellData);
-                    }
-                    else if (cellData.state == GridCellState.GridWall)
-                    {
-                        SpawnGridWallInternal(gridPos, worldPos);
                     }
                 }
             }
@@ -318,15 +327,6 @@ namespace MazeGrid
         }
 
         /// <summary>
-        /// Creates a wall for a GridWall cell during BuildFromConfig.
-        /// Override in game subclass to spawn game-specific wall prefabs.
-        /// </summary>
-        protected virtual GameObject CreateWall(Vector2Int gridPos, Vector3 worldPos)
-        {
-            return null;
-        }
-
-        /// <summary>
         /// Creates an item for a spawner to push into the grid.
         /// Override in game subclass to spawn game-specific prefabs.
         /// </summary>
@@ -345,12 +345,15 @@ namespace MazeGrid
                 return false;
             if (gridPos == startPos)
                 return true;
-            if (spawnerCells.Contains(gridPos))
-                return false;
-            if (gridWallCells.Contains(gridPos))
-                return false;
+            // Exit row is always walkable
             if (gridPos.y == exitRow)
                 return true;
+            // Invalid cells (not in validCells) are not walkable
+            if (!validCells.Contains(gridPos))
+                return false;
+            if (spawnerCells.Contains(gridPos))
+                return false;
+            // Walkable if no item occupying the cell
             return grid[gridPos] == null;
         }
 
@@ -495,8 +498,6 @@ namespace MazeGrid
         {
             if (!CanMoveBetweenCells(fromPos, toPos))
                 return false;
-            if (gridWallCells.Contains(toPos))
-                return false;
             if (!IsCellEmpty(toPos))
                 return false;
             if (IsSpawnerTargetWithItemsRemaining(toPos))
@@ -564,53 +565,23 @@ namespace MazeGrid
             spawners.Add(spawner);
         }
 
-        private void SpawnGridWallInternal(Vector2Int gridPos, Vector3 worldPos)
+        /// <summary>
+        /// Marks border offset cells as invalid (not part of the board).
+        /// These cells remain unregistered in validCells, making them impassable.
+        /// No prefabs are spawned — the border builder handles visuals.
+        /// </summary>
+        private void SpawnBorderInvalidCells(int configColumns, int configRowCount)
         {
-            gridWallCells.Add(gridPos);
-
-            var wall = CreateWall(gridPos, worldPos);
-            if (wall != null)
-            {
-                gridWalls.Add(wall);
-            }
-        }
-
-        private void SpawnBorderWalls(int configColumns, int configRowCount)
-        {
+            // Border offset cells are simply not added to validCells,
+            // so they're automatically treated as Invalid (not walkable, not solid).
+            // Nothing to spawn — just ensure they stay out of validCells.
+            // The exit row (row 0) is also not in validCells but is handled
+            // specially by pathfinding (always walkable).
             if (borderOffsetCount <= 0)
                 return;
 
-            for (int col = 0; col < borderOffsetCount; col++)
-            {
-                for (int row = 1; row < gridHeight; row++)
-                {
-                    Vector2Int gridPos = new Vector2Int(col, row);
-                    Vector3 worldPos = grid.GridToWorld(gridPos);
-                    SpawnGridWallInternal(gridPos, worldPos);
-                }
-            }
-
-            int rightBorderStart = borderOffsetCount + configColumns;
-            for (int col = rightBorderStart; col < gridWidth; col++)
-            {
-                for (int row = 1; row < gridHeight; row++)
-                {
-                    Vector2Int gridPos = new Vector2Int(col, row);
-                    Vector3 worldPos = grid.GridToWorld(gridPos);
-                    SpawnGridWallInternal(gridPos, worldPos);
-                }
-            }
-
-            int bottomBorderStart = 1 + configRowCount;
-            for (int row = bottomBorderStart; row < gridHeight; row++)
-            {
-                for (int col = borderOffsetCount; col < rightBorderStart; col++)
-                {
-                    Vector2Int gridPos = new Vector2Int(col, row);
-                    Vector3 worldPos = grid.GridToWorld(gridPos);
-                    SpawnGridWallInternal(gridPos, worldPos);
-                }
-            }
+            // No action needed — cells default to Invalid by not being in validCells.
+            // This method exists for clarity and as a hook for future border logic.
         }
 
         #endregion
@@ -633,17 +604,9 @@ namespace MazeGrid
                 SafeDestroy(spawner.gameObject);
             }
 
-            // Destroy walls
-            foreach (var wall in gridWalls)
-            {
-                if (wall != null)
-                    SafeDestroy(wall);
-            }
-
             spawnerCells.Clear();
             spawners.Clear();
-            gridWallCells.Clear();
-            gridWalls.Clear();
+            validCells.Clear();
             hiddenItems.Clear();
 
             OnCellCleared -= CheckAndRevealHiddenItems;
@@ -731,17 +694,16 @@ namespace MazeGrid
                     {
                         Gizmos.color = new Color(1f, 0f, 1f, 0.5f);
                     }
-                    else if (gridWallCells.Contains(cellPos))
+                    else if (validCells.Contains(cellPos))
                     {
-                        Gizmos.color = new Color(0.6f, 0.4f, 0.2f, 0.7f);
-                    }
-                    else if (grid != null && grid[x, z] != null)
-                    {
-                        Gizmos.color = new Color(1f, 0f, 0f, 0.3f);
+                        if (grid != null && grid[x, z] != null)
+                            Gizmos.color = new Color(1f, 0f, 0f, 0.3f); // Valid with item
+                        else
+                            Gizmos.color = new Color(0.3f, 0.7f, 1f, 0.3f); // Valid empty
                     }
                     else
                     {
-                        Gizmos.color = new Color(1f, 1f, 1f, 0.1f);
+                        Gizmos.color = new Color(0.2f, 0.2f, 0.2f, 0.1f); // Invalid
                     }
 
                     Gizmos.DrawCube(cellCenter, new Vector3(cellSizeX * 0.9f, 0.1f, cellSizeZ * 0.9f));
