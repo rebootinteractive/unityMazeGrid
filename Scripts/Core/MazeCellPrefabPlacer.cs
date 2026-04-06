@@ -13,6 +13,8 @@ namespace MazeGrid
         [SerializeField] private GameObject validCellPrefab;
         [Tooltip("Spawned at the center of each Invalid cell. Optional.")]
         [SerializeField] private GameObject invalidCellPrefab;
+        [Tooltip("Spawned at the center of each Spawner cell. Falls back to validCellPrefab if not set. Optional.")]
+        [SerializeField] private GameObject spawnerCellPrefab;
 
         [Header("Settings")]
         [Tooltip("Y offset applied to all spawned prefabs")]
@@ -70,8 +72,24 @@ namespace MazeGrid
                     if (y == mazeGrid.ExitRow)
                         continue;
 
-                    bool isSolid = mazeGrid.IsSolidCell(gridPos);
-                    GameObject prefab = isSolid ? validCellPrefab : invalidCellPrefab;
+                    GameObject prefab;
+                    string label;
+
+                    if (mazeGrid.IsSpawnerCell(gridPos))
+                    {
+                        prefab = spawnerCellPrefab != null ? spawnerCellPrefab : validCellPrefab;
+                        label = "Spawner";
+                    }
+                    else if (mazeGrid.IsSolidCell(gridPos))
+                    {
+                        prefab = validCellPrefab;
+                        label = "Valid";
+                    }
+                    else
+                    {
+                        prefab = invalidCellPrefab;
+                        label = "Invalid";
+                    }
 
                     if (prefab == null)
                         continue;
@@ -79,7 +97,7 @@ namespace MazeGrid
                     Vector3 worldPos = mazeGrid.GetCellWorldPosition(gridPos);
                     worldPos.y += yOffset;
 
-                    SpawnPrefab(prefab, worldPos, $"{(isSolid ? "Valid" : "Invalid")}_{x}_{y}");
+                    SpawnPrefab(prefab, worldPos, $"{label}_{x}_{y}");
                 }
             }
         }

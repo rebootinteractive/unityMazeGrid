@@ -163,6 +163,14 @@ namespace MazeGrid
         }
 
         /// <summary>
+        /// Returns true if the cell is a spawner cell.
+        /// </summary>
+        public bool IsSpawnerCell(Vector2Int gridPos)
+        {
+            return spawnerCells.Contains(gridPos);
+        }
+
+        /// <summary>
         /// Returns true if the cell is part of the board (Valid or Spawner).
         /// Invalid cells and out-of-bounds return false.
         /// Used by MazeBorderCreator to determine the grid shape for border generation.
