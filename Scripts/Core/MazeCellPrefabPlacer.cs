@@ -77,7 +77,7 @@ namespace MazeGrid
 
                     if (mazeGrid.IsSpawnerCell(gridPos))
                     {
-                        prefab = spawnerCellPrefab != null ? spawnerCellPrefab : validCellPrefab;
+                        prefab = spawnerCellPrefab;
                         label = "Spawner";
                     }
                     else if (mazeGrid.IsSolidCell(gridPos))
