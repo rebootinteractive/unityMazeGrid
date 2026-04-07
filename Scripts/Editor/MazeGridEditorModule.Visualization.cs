@@ -292,6 +292,8 @@ namespace MazeGrid.Editor
                     return new Color(0.5f, 0.5f, 0.5f);
                 case GridCellState.Valid:
                     return new Color(0.9f, 0.9f, 0.9f);
+                case GridCellState.DummyValid:
+                    return new Color(0.85f, 0.85f, 0.7f); // Slightly yellowish to distinguish from Valid
                 case GridCellState.Spawner:
                     return new Color(.7f, .7f, .7f);
                 default:

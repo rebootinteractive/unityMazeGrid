@@ -80,6 +80,11 @@ namespace MazeGrid
                         prefab = spawnerCellPrefab;
                         label = "Spawner";
                     }
+                    else if (mazeGrid.IsDummyValidCell(gridPos))
+                    {
+                        // DummyValid: part of the board but no cell prefab spawned
+                        continue;
+                    }
                     else if (mazeGrid.IsSolidCell(gridPos))
                     {
                         prefab = validCellPrefab;

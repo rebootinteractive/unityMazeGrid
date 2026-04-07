@@ -7,7 +7,9 @@ namespace MazeGrid
         Spawner = 2,   // Spawner occupying this cell
 
         [System.Obsolete("Use Invalid instead. Kept for serialization backward compatibility.")]
-        GridWall = 3   // Treated as Invalid at runtime
+        GridWall = 3,  // Treated as Invalid at runtime
+
+        DummyValid = 4 // Behaves like Valid (solid, walkable) but MazeCellPrefabPlacer skips it. Visual container cells.
     }
 
     public enum SpawnerDirection { Up, Down, Left, Right }

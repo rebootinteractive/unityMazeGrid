@@ -42,6 +42,9 @@ namespace MazeGrid
         // Valid cells tracking (cells that are part of the board, may or may not have items)
         private HashSet<Vector2Int> validCells = new HashSet<Vector2Int>();
 
+        // Dummy valid cells (visual containers — behave like valid but skip cell prefab placement)
+        private HashSet<Vector2Int> dummyValidCells = new HashSet<Vector2Int>();
+
         // Hidden item tracking
         private Dictionary<Vector2Int, IMazeItem> hiddenItems = new Dictionary<Vector2Int, IMazeItem>();
 
@@ -171,6 +174,14 @@ namespace MazeGrid
         }
 
         /// <summary>
+        /// Returns true if the cell is a DummyValid cell (visual container, no cell prefab).
+        /// </summary>
+        public bool IsDummyValidCell(Vector2Int gridPos)
+        {
+            return dummyValidCells.Contains(gridPos);
+        }
+
+        /// <summary>
         /// Returns true if the cell is part of the board (Valid or Spawner).
         /// Invalid cells and out-of-bounds return false.
         /// Used by MazeBorderCreator to determine the grid shape for border generation.
@@ -272,10 +283,13 @@ namespace MazeGrid
                         continue;
 #pragma warning restore CS0618
 
-                    if (cellData.state == GridCellState.Valid)
+                    if (cellData.state == GridCellState.Valid || cellData.state == GridCellState.DummyValid)
                     {
                         // Register as a valid cell (part of the board)
                         validCells.Add(gridPos);
+
+                        if (cellData.state == GridCellState.DummyValid)
+                            dummyValidCells.Add(gridPos);
 
                         // Only spawn an item if a type is assigned
                         if (cellData.itemTypeId >= 0)
@@ -615,6 +629,7 @@ namespace MazeGrid
             spawnerCells.Clear();
             spawners.Clear();
             validCells.Clear();
+            dummyValidCells.Clear();
             hiddenItems.Clear();
 
             OnCellCleared -= CheckAndRevealHiddenItems;

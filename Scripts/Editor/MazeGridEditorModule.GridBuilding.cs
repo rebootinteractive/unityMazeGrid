@@ -125,6 +125,12 @@ namespace MazeGrid.Editor
                 _selectedCellState = GridCellState.Spawner;
             }
 
+            GUI.backgroundColor = _selectedCellState == GridCellState.DummyValid ? Color.yellow : Color.white;
+            if (GUILayout.Button("Dummy Valid", GUILayout.Height(25)))
+            {
+                _selectedCellState = GridCellState.DummyValid;
+            }
+
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
 
